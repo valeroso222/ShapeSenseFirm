@@ -1,8 +1,8 @@
-#include<Encoder.h>
+#include <Encoder.h>
 #include "dec.h"
 
-#define serial Serial1
-//#define serial Serial
+// #define SERIAL Serial1
+#define SERIAL Serial
 
 void setup() {
   pinMode(M1IN1, OUTPUT);
@@ -20,22 +20,43 @@ void setup() {
   pinMode(SW1, INPUT_PULLUP);
   pinMode(SW2, INPUT_PULLUP);
   pinMode(SW3, INPUT_PULLUP);
-   
-  //pinMode(STBY, OUTPUT);
+
+  // pinMode(STBY, OUTPUT);
   pinMode(LED, OUTPUT);
 
-  serial.begin(BAUDRATE);
+  SERIAL.begin(BAUDRATE);
+
   delay(2000);
-  serial.println("Triple_Motor_test Standby");
-  //digitalWrite(STBY, HIGH);
+  SERIAL.println("Demo mode: Standby...");
+  SERIAL.println("Type \'R\' to enable Random-change mode.");
+  SERIAL.println("Type \'A\' to enable Auto-change mode.");
+  SERIAL.println("Type \'D\' to disable Random/Auto-change mode.");
+  // digitalWrite(STBY, HIGH);
 }
 
 void loop() {
 
-  //int SW1val = digitalRead(SW1);
-  //int SW2val = digitalRead(SW2);
-  //int SW3val = digitalRead(SW3);
-  
+   if (isMovingAuto) {
+    if (lastShapedTimeMillis == 0) {
+      lastShapedTimeMillis = millis();
+      changeShape();
+    }
+  if (millis() - lastShapedTimeMillis > SHAPE_CHANGE_TIME) {
+      lastShapedTimeMillis = 0;
+    }
+  } else if (isMovingRandom) {
+    if (lastShapedTimeMillis == 0) {
+      lastShapedTimeMillis = millis();
+      shapeRandom();
+    }
+
+    if (millis() - lastShapedTimeMillis > SHAPE_CHANGE_TIME) {
+      lastShapedTimeMillis = 0;
+    }
+  }
+
+  checkSwitches();
+
   counter1 = E1.read();
   counter2 = E2.read();
   counter3 = E3.read();
@@ -44,45 +65,14 @@ void loop() {
   int m2Out = calculatePWM(targetCount2, counter2, M2IN1, M2IN2);
   int m3Out = calculatePWM(targetCount3, counter3, M3IN1, M3IN2);
 
-  /*if(SW1val==LOW) {
-    serial.println("SW1");
-    digitalWrite(M1IN1, LOW);
-    digitalWrite(M1IN2, HIGH);
-    analogWrite(M1PWM, 100);
-    targetCount1 = 0;
-    E1.write(0);
-  } else {*/
-    analogWrite(M1PWM, m1Out);
-  /*}
-  if(SW2val==LOW) {
-    serial.println("SW2");
-    digitalWrite(M2IN1, LOW);
-    digitalWrite(M2IN2, HIGH);
-    analogWrite(M2PWM, 100);
-    targetCount2 = 0;
-    E2.write(0);
-  } else {*/
-    analogWrite(M2PWM, m2Out);
-  /*}
-  if(SW3val==LOW) {
-    serial.println("SW3");
-    digitalWrite(M3IN1, LOW);
-    digitalWrite(M3IN2, HIGH);
-    analogWrite(M3PWM, 100);
-    targetCount3 = 0;
-    E3.write(0);
-  } else {*/
-    analogWrite(M3PWM, m3Out);
-  //}
+  analogWrite(M1PWM, m1Out);
+  analogWrite(M2PWM, m2Out);
+  analogWrite(M3PWM, m3Out);
 
-  if (serial.available() > 0){
-    handleSerialEvent();
-  }
+  if (SERIAL.available() > 0) handleSerialEvent();
 }
 
-
 int calculatePWM(int targetCount, int counter, int motorPin1, int motorPin2) {
-
   int motorErrorInCounts = targetCount - counter;
 
   if (abs(motorErrorInCounts) < 300) {
@@ -96,7 +86,7 @@ int calculatePWM(int targetCount, int counter, int motorPin1, int motorPin2) {
   if (motorOut > 0) {  // increase motor count
     digitalWrite(motorPin1, LOW);
     digitalWrite(motorPin2, HIGH);
-  } else if (motorOut < -0){  // decrease motor count
+  } else if (motorOut < -0) {  // decrease motor count
     digitalWrite(motorPin1, HIGH);
     digitalWrite(motorPin2, LOW);
   }
@@ -104,52 +94,74 @@ int calculatePWM(int targetCount, int counter, int motorPin1, int motorPin2) {
   return constrain(abs(motorOut), MIN_MOTOR_OUT, MAX_MOTOR_OUT);
 }
 
-
 void handleSerialEvent() {
-  char cmd = serial.read();
+  char cmd = SERIAL.read();
   switch (cmd) {
+
+    case 'A':
+      isMovingAuto = true;
+      SERIAL.println("Auto mode is enabled.");
+      shapeInitial();
+      break;
+    case 'R':
+      isMovingRandom = true;
+      randomSeed(analogRead(0));
+      SERIAL.println("Random mode is enabled.");
+      shapeInitial();
+      break;
+    case 'D':
+      isMovingAuto = false;
+      isMovingRandom = false;
+      SERIAL.println("Auto or Random mode is disabled. Wait to input a new command until ShapeSense ends to initialize the motor positions.");
+      shapeInitial();
+      break;
+
     case 'a':
-      targetCount1 = fetchValue()*125;
-      serial.print("Target1: ");
-      serial.println(targetCount1);
-      while(Serial.available() > 0) Serial.read();
+      targetCount1 = lengthToCounts(fetchValue());
+      SERIAL.print("Target1: ");
+      SERIAL.println(targetCount1);
+      while (SERIAL.available() > 0) SERIAL.read();
       break;
     case 'b':
-      targetCount2 = fetchValue()*125;
-      serial.print("Target2: ");
-      serial.println(targetCount2);
-      while(Serial.available() > 0) Serial.read();
+      targetCount2 = lengthToCounts(fetchValue());
+      SERIAL.print("Target2: ");
+      SERIAL.println(targetCount2);
+      while (SERIAL.available() > 0) SERIAL.read();
       break;
     case 'c':
-      targetCount3 = fetchValue()*125;
-      serial.print("Target3: ");
-      serial.println(targetCount3);
-      while(Serial.available() > 0) Serial.read();
+      targetCount3 = lengthToCounts(fetchValue());
+      SERIAL.print("Target3: ");
+      SERIAL.println(targetCount3);
+      while (SERIAL.available() > 0) SERIAL.read();
       break;
     case 'i':
       stop1();
       stop2();
       stop3();
-      while(Serial.available() > 0) Serial.read();
+      while (SERIAL.available() > 0) SERIAL.read();
       break;
     case 'g':
-      serial.print("a: ");serial.print(counter1);
-      serial.print(" b: ");serial.print(counter2);
-      serial.print(" c: ");serial.println(counter3);
-      while(Serial.available() > 0) Serial.read();
+      SERIAL.print("a: ");
+      SERIAL.print(counter1);
+      SERIAL.print(" b: ");
+      SERIAL.print(counter2);
+      SERIAL.print(" c: ");
+      SERIAL.println(counter3);
+      while (SERIAL.available() > 0) SERIAL.read();
       break;
     case 'r':
       targetCount1 = -22000;
       targetCount2 = -22000;
       targetCount3 = -22000;
-      while(Serial.available() > 0) Serial.read();
+      while (SERIAL.available() > 0) SERIAL.read();
       break;
-    default:
-      serial.print("ERROR: ");
-      serial.print(cmd+serial.readString());
-      while(Serial.available() > 0) Serial.read();
-      break;
+    // default:
+    //   SERIAL.print("ERROR: ");
+    //   SERIAL.print(cmd + SERIAL.readString());
+    //   while (SERIAL.available() > 0) SERIAL.read();
+    //   break;
   }
+  lastActuatedTimeMillis = millis();
 }
 
 int fetchValue() {
@@ -157,8 +169,8 @@ int fetchValue() {
   char string[10];
 
   while (i < sizeof(string)) {
-    if (serial.available()) {
-      char c = serial.read();
+    if (SERIAL.available()) {
+      char c = SERIAL.read();
       if ((c >= '0' && c <= '9') || c == '-') {
         string[i] = c;
         i++;
@@ -171,8 +183,8 @@ int fetchValue() {
   return atoi(string);
 }
 
-void stop1(){
-  serial.println("stop1");
+void stop1() {
+  SERIAL.println("stop1");
   digitalWrite(M1IN1, HIGH);
   digitalWrite(M1IN2, HIGH);
   analogWrite(M1PWM, 0);
@@ -180,11 +192,11 @@ void stop1(){
   digitalWrite(M1IN1, LOW);
   digitalWrite(M1IN2, LOW);
   E1.write(0);
-  targetCount1=0;
+  targetCount1 = 0;
 }
 
-void stop2(){
-  serial.println("stop2");
+void stop2() {
+  SERIAL.println("stop2");
   digitalWrite(M2IN1, HIGH);
   digitalWrite(M2IN2, HIGH);
   analogWrite(M2PWM, 0);
@@ -192,11 +204,11 @@ void stop2(){
   digitalWrite(M2IN1, LOW);
   digitalWrite(M2IN2, LOW);
   E2.write(0);
-  targetCount2=0;
+  targetCount2 = 0;
 }
 
-void stop3(){
-  serial.println("stop3");
+void stop3() {
+  SERIAL.println("stop3");
   digitalWrite(M3IN1, HIGH);
   digitalWrite(M3IN2, HIGH);
   analogWrite(M3PWM, 0);
@@ -204,5 +216,118 @@ void stop3(){
   digitalWrite(M3IN1, LOW);
   digitalWrite(M3IN2, LOW);
   E3.write(0);
-  targetCount3=0;
+  targetCount3 = 0;
+}
+
+bool checkSwitches() {
+  bool bHitSwitch = false;
+  if (digitalRead(SW1) == LOW) {  // Switch-1 is being pushed, motor-1 stops.
+    if (targetCount1 >= 0) return false;
+    SERIAL.println("Switch-1 is being pushed.");
+    forceMotorStop(M1IN1, M1IN2, M1PWM, targetCount1);
+    E1.write(0);
+    bHitSwitch = true;
+  }
+  if (digitalRead(SW2) == LOW) {  // Switch-2 is being pushed, motor-2 stops.
+    if (targetCount2 >= 0) return false;
+    SERIAL.println("Switch-2 is being pushed.");
+    forceMotorStop(M2IN1, M2IN2, M2PWM, targetCount2);
+    E2.write(0);
+    bHitSwitch = true;
+  }
+  if (digitalRead(SW3) == LOW) {  // Switch-3 is being pushed, motor-3 stops.
+    if (targetCount3 >= 0) return false;
+    SERIAL.println("Switch-3 is being pushed.");
+    forceMotorStop(M3IN1, M3IN2, M3PWM, targetCount3);
+    E3.write(0);
+    bHitSwitch = true;
+  }
+  return bHitSwitch;
+}
+
+void forceMotorStop(int motorPin1, int motorPin2, int pwmPin,
+                    volatile long &targetCount) {
+  digitalWrite(motorPin1, LOW);
+  digitalWrite(motorPin2, HIGH);
+  analogWrite(pwmPin, 100);
+  targetCount = 0;
+}
+
+void changeShape() {
+  switch (shape) {
+    case INITIAL:
+      shapeMinato();
+      shape = MINATO;
+      break;
+    case MINATO:
+      shapeMadara();
+      shape = MADARA;
+      break;
+    case MADARA:
+      shapeHammer();
+      shape = HAMMER;
+      break;
+    case HAMMER:
+      shapeSword();
+      shape = SWORD;
+      break;
+    case SWORD:
+      shapeInitial();
+      shape = INITIAL;
+      break;
+  }
+}
+
+void shapeMinato() {
+  SERIAL.println("Minato");
+  // TODO: Write below
+  // targetCount1 = lengthToCounts(...);
+  // targetCount2 = lengthToCounts(...);
+  // targetCount3 = lengthToCounts(...);
+}
+void shapeMadara() {
+  SERIAL.println("Madara");
+  // TODO: Write below
+  // targetCount1 = lengthToCounts(...);
+  // targetCount2 = lengthToCounts(...);
+  // targetCount3 = lengthToCounts(...);
+}
+void shapeHammer() {
+  SERIAL.println("Hammer");
+  // TODO: Write below
+  // targetCount1 = lengthToCounts(...);
+  // targetCount2 = lengthToCounts(...);
+  // targetCount3 = lengthToCounts(...);
+}
+void shapeSword() {
+  SERIAL.println("Sword");
+  // TODO: Write below
+  // targetCount1 = lengthToCounts(...);
+  // targetCount2 = lengthToCounts(...);
+  // targetCount3 = lengthToCounts(...);
+}
+void shapeInitial() {
+  SERIAL.println("Initial shape");
+  targetCount1 = 0;
+  targetCount2 = 0;
+  targetCount3 = 0;
+}
+
+void shapeRandom() {
+  SERIAL.print("Random Shape: ");
+  float aVal = random(10, 180);
+  float bVal = random(5, aVal);
+  float cVal = random(0, bVal);
+  SERIAL.print(aVal);
+  SERIAL.print(", ");
+  SERIAL.print(bVal);
+  SERIAL.print(", ");
+  SERIAL.println(cVal);
+  targetCount1 = lengthToCounts(aVal);
+  targetCount2 = lengthToCounts(bVal);
+  targetCount3 = lengthToCounts(cVal);
+}
+
+long lengthToCounts(float length) {
+  return length * LEN_TO_CNT;
 }
