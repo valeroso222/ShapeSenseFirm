@@ -75,19 +75,19 @@ void handleSerialEvent() {
   char cmd = SERIAL.read();
   switch (cmd) {
     case 'a':
-      targetCount1 = fetchValue() * LEN_TO_CNT;
+      targetCount1 = lengthToCounts(fetchValue());
       SERIAL.print("Target1: ");
       SERIAL.println(targetCount1);
       while (SERIAL.available() > 0) SERIAL.read();
       break;
     case 'b':
-      targetCount2 = fetchValue() * LEN_TO_CNT;
+      targetCount2 = lengthToCounts(fetchValue());
       SERIAL.print("Target2: ");
       SERIAL.println(targetCount2);
       while (SERIAL.available() > 0) SERIAL.read();
       break;
     case 'c':
-      targetCount3 = fetchValue() * LEN_TO_CNT;
+      targetCount3 = lengthToCounts(fetchValue());
       SERIAL.print("Target3: ");
       SERIAL.println(targetCount3);
       while (SERIAL.available() > 0) SERIAL.read();
@@ -203,4 +203,8 @@ void forceMotorStop(int motorPin1, int motorPin2, int pwmPin,
   digitalWrite(motorPin2, HIGH);
   analogWrite(pwmPin, 100);
   targetCount = 0;
+}
+
+long lengthToCounts(float length) {
+  return length * LEN_TO_CNT;
 }
