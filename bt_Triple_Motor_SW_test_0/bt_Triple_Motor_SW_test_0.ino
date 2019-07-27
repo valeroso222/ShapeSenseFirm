@@ -177,20 +177,20 @@ void stop3() {
 }
 
 void checkSwitches() {
-  if (digitalRead(SW1) == LOW) {  // Switch-1 is being pushed, motor-1 stops.
-    if (targetCount1 >= 0) return;
+  if (digitalRead(SW1) == LOW && targetCount1 < 0) {  // Switch-1 is being pushed, motor-1 stops.
+    // if (targetCount1 >= 0) return;
     SERIAL.println("Switch-1 is being pushed.");
     forceMotorStop(M1IN1, M1IN2, M1PWM, targetCount1);
     E1.write(0);
   }
-  if (digitalRead(SW2) == LOW) {  // Switch-2 is being pushed, motor-2 stops.
-    if (targetCount2 >= 0) return;
+  if (digitalRead(SW2) == LOW && targetCount2 < 0) {  // Switch-2 is being pushed, motor-2 stops.
+    // if (targetCount2 >= 0) return;
     SERIAL.println("Switch-2 is being pushed.");
     forceMotorStop(M2IN1, M2IN2, M2PWM, targetCount2);
     E2.write(0);
   }
-  if (digitalRead(SW3) == LOW) {  // Switch-3 is being pushed, motor-3 stops.
-    if (targetCount3 >= 0) return;
+  if (digitalRead(SW3) == LOW && targetCount3 < 0) {  // Switch-3 is being pushed, motor-3 stops.
+    // if (targetCount3 >= 0) return;
     SERIAL.println("Switch-3 is being pushed.");
     forceMotorStop(M3IN1, M3IN2, M3PWM, targetCount3);
     E3.write(0);
