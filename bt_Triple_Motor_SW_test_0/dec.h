@@ -1,7 +1,6 @@
 #ifndef _DEC_H
 #define _DEC_H
 
-
 const long BAUDRATE = 115200;
 
 const int MAX_MOTOR_OUT = 255;
@@ -38,7 +37,7 @@ volatile long counter3 = 0;
 volatile long prevCounter3 = 0;
 volatile long targetCount3 = 0;
 
-//const int STBY = 2;
+// const int STBY = 2;
 
 const int LED = 13;
 const int SW1 = 8;
@@ -48,5 +47,8 @@ const int SW3 = 10;
 volatile bool isMoving1 = false;
 volatile bool isMoving2 = false;
 volatile bool isMoving3 = false;
+
+// Conversion ratio for length (mm) to encoder value
+const int LEN_TO_CNT = 125;
 
 #endif
