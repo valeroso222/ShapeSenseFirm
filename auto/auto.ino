@@ -219,30 +219,25 @@ void stop3() {
   targetCount3 = 0;
 }
 
-bool checkSwitches() {
-  bool bHitSwitch = false;
-  if (digitalRead(SW1) == LOW) {  // Switch-1 is being pushed, motor-1 stops.
-    if (targetCount1 >= 0) return false;
+void checkSwitches() {
+  if (digitalRead(SW1) == LOW && targetCount1 < 0) {  // Switch-1 is being pushed, motor-1 stops.
     SERIAL.println("Switch-1 is being pushed.");
     forceMotorStop(M1IN1, M1IN2, M1PWM, targetCount1);
     E1.write(0);
-    bHitSwitch = true;
+    SERIAL.println("Stop motor-1");
   }
-  if (digitalRead(SW2) == LOW) {  // Switch-2 is being pushed, motor-2 stops.
-    if (targetCount2 >= 0) return false;
+  if (digitalRead(SW2) == LOW && targetCount2 < 0) {  // Switch-2 is being pushed, motor-2 stops.
     SERIAL.println("Switch-2 is being pushed.");
     forceMotorStop(M2IN1, M2IN2, M2PWM, targetCount2);
     E2.write(0);
-    bHitSwitch = true;
+    SERIAL.println("Stop motor-2");
   }
-  if (digitalRead(SW3) == LOW) {  // Switch-3 is being pushed, motor-3 stops.
-    if (targetCount3 >= 0) return false;
+  if (digitalRead(SW3) == LOW && targetCount3 < 0) {  // Switch-3 is being pushed, motor-3 stops.
     SERIAL.println("Switch-3 is being pushed.");
     forceMotorStop(M3IN1, M3IN2, M3PWM, targetCount3);
     E3.write(0);
-    bHitSwitch = true;
+    SERIAL.println("Stop motor-3");
   }
-  return bHitSwitch;
 }
 
 void forceMotorStop(int motorPin1, int motorPin2, int pwmPin,
@@ -316,8 +311,11 @@ void shapeInitial() {
 void shapeRandom() {
   SERIAL.print("Random Shape: ");
   float aVal = random(10, 180);
-  float bVal = random(5, aVal);
-  float cVal = random(0, bVal);
+  // The delta between two wings should be less than 90 mm.
+  float bMin = aVal - 90 > 5 ? aVal - 90 : 5;
+  float bVal = random(bMin, aVal);
+  float cMin = bVal - 90 > 0 ? bVal - 90 : 0;
+  float cVal = random(cMin, bVal);
   SERIAL.print(aVal);
   SERIAL.print(", ");
   SERIAL.print(bVal);
