@@ -19,3 +19,11 @@ The serial commands are below:
 
 ## auto (<- the file name should be changed.)
 Firmware for Non-VR demo.
+
+This program has the following additional serial commands:
+
+'A': Enalbe Auto-mode, automatically change the positions of wings with the following order: 'initial shape' -> 'Kunai' -> 'Big fan' -> 'Hammer' -> 'Sword'.
+
+'R': Enable Random-mode, randomly change the positions of wings.
+
+'D': Disable auto/random-mode.
