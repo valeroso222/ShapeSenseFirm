@@ -275,31 +275,27 @@ void changeShape() {
 
 void shapeMinato() {
   SERIAL.println("Minato");
-  // TODO: Write below
-  // targetCount1 = lengthToCounts(...);
-  // targetCount2 = lengthToCounts(...);
-  // targetCount3 = lengthToCounts(...);
+  targetCount1 = lengthToCounts(30);
+  targetCount2 = lengthToCounts(30);
+  targetCount3 = lengthToCounts(0);
 }
 void shapeMadara() {
   SERIAL.println("Madara");
-  // TODO: Write below
-  // targetCount1 = lengthToCounts(...);
-  // targetCount2 = lengthToCounts(...);
-  // targetCount3 = lengthToCounts(...);
+  targetCount1 = lengthToCounts(180);
+  targetCount2 = lengthToCounts(160);
+  targetCount3 = lengthToCounts(70);
 }
 void shapeHammer() {
   SERIAL.println("Hammer");
-  // TODO: Write below
-  // targetCount1 = lengthToCounts(...);
-  // targetCount2 = lengthToCounts(...);
-  // targetCount3 = lengthToCounts(...);
+  targetCount1 = lengthToCounts(160);
+  targetCount2 = lengthToCounts(160);
+  targetCount3 = lengthToCounts(160);
 }
 void shapeSword() {
   SERIAL.println("Sword");
-  // TODO: Write below
-  // targetCount1 = lengthToCounts(...);
-  // targetCount2 = lengthToCounts(...);
-  // targetCount3 = lengthToCounts(...);
+  targetCount1 = lengthToCounts(180);
+  targetCount2 = lengthToCounts(180);
+  targetCount3 = lengthToCounts(120);
 }
 void shapeInitial() {
   SERIAL.println("Initial shape");

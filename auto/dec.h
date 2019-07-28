@@ -64,6 +64,6 @@ enum Shape {
 };
 Shape shape = INITIAL;
 volatile unsigned long lastShapedTimeMillis = 0;
-const int SHAPE_CHANGE_TIME = 5 * 1000;  // millis
+const int SHAPE_CHANGE_TIME = 10 * 1000;  // millis
 
 #endif
